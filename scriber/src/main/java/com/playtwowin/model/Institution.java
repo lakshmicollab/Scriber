@@ -1,8 +1,12 @@
 package com.playtwowin.model;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
@@ -13,7 +17,7 @@ import javax.persistence.Table;
 public class Institution {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "institutionId")
 	private int institutionId;
 
@@ -47,9 +51,8 @@ public class Institution {
 	@Column(name = "notes")
 	private String notes;
 
-	@OneToMany
-	@JoinColumn(name = "affiliateId")
-	private Affiliate affiliate;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "institution")
+	private List<Affiliate> affiliate;
 
 	public int getInstitutionId() {
 		return institutionId;
@@ -139,17 +142,17 @@ public class Institution {
 		this.notes = notes;
 	}
 
-	public Affiliate getAffiliate() {
+	public List<Affiliate> getAffiliate() {
 		return affiliate;
 	}
 
-	public void setAffiliate(Affiliate affiliate) {
+	public void setAffiliate(List<Affiliate> affiliate) {
 		this.affiliate = affiliate;
 	}
 
 	public Institution(int institutionId, String instituteName, String certification, String localAddress, String city,
 			String state, String zipCode, String country, String email, String instituteWebsite, String notes,
-			Affiliate affiliate) {
+			List<Affiliate> affiliate) {
 		super();
 		this.institutionId = institutionId;
 		this.instituteName = instituteName;

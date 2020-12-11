@@ -1,37 +1,38 @@
 package com.playtwowin.model;
 
+import java.io.File;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.springframework.web.multipart.MultipartFile;
-
 @Entity
-@Table(name="Afiliate")
+@Table(name = "Affiliate")
 public class Affiliate {
-	
+
 	@Id
-	@GeneratedValue
-	@Column(name="affiliateId")
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "affiliateId")
 	private int affiliateId;
-	
-	@Column(name="logo")
-	private MultipartFile logo; //may need different data type
-	
-	@Column(name="affiliateInstitute")
+
+	@Column(name = "logo")
+	private File logo; // may need different data type
+
+	@Column(name = "affiliateInstitute")
 	private String affiliateInstitute;
-	
-	@ManyToOne
-	@Column(name="institutionId")
+
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Institution institution;
-	
-	@OneToMany
-	@Column(name="advisorId")
-	private Advisor advisor;
+
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "affiliate")
+	private List<Advisor> advisor;
 
 	public int getAffiliateId() {
 		return affiliateId;
@@ -41,11 +42,11 @@ public class Affiliate {
 		this.affiliateId = affiliateId;
 	}
 
-	public MultipartFile getLogo() {
+	public File getLogo() {
 		return logo;
 	}
 
-	public void setLogo(MultipartFile logo) {
+	public void setLogo(File logo) {
 		this.logo = logo;
 	}
 
@@ -65,16 +66,16 @@ public class Affiliate {
 		this.institution = institution;
 	}
 
-	public Advisor getAdvisor() {
+	public List<Advisor> getAdvisor() {
 		return advisor;
 	}
 
-	public void setAdvisor(Advisor advisor) {
+	public void setAdvisor(List<Advisor> advisor) {
 		this.advisor = advisor;
 	}
 
-	public Affiliate(int affiliateId, MultipartFile logo, String affiliateInstitute, Institution institution,
-			Advisor advisor) {
+	public Affiliate(int affiliateId, File logo, String affiliateInstitute, Institution institution,
+			List<Advisor> advisor) {
 		super();
 		this.affiliateId = affiliateId;
 		this.logo = logo;

@@ -1,10 +1,13 @@
 package com.playtwowin.model;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -12,46 +15,46 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="Advisor")
+@Table(name = "Advisor")
 public class Advisor {
-	
-	private enum advisorType{
-		ADMIN, BASIC
+
+	private enum advisorType {
+		FINANCIALPLANNER, WEALTHMANAGER, REGISTEREDREPRESENTATIVE, INVESTMENTADVISOR, CFP, CHFC, CFA, CPA
 	};
-	
+
 	@Id
-	@GeneratedValue
-	@Column(name="advisorId")
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "advisorId")
 	private int advisorId;
-	
-	@Column(name="approvedName")
+
+	@Column(name = "approvedName")
 	private String approvedName;
-	
-	@Column(name="advisorType")
+
+	@Column(name = "advisorType")
 	@Enumerated(EnumType.STRING)
 	private advisorType type;
-	
-	@Column(name="partyAffiliation")
+
+	@Column(name = "partyAffiliation")
 	private String partyAffiliation;
-	
-	@Column(name="website")
+
+	@Column(name = "website")
 	private String website;
-	
-	@Column(name="email")
+
+	@Column(name = "email")
 	private String email;
-	
-	@Column(name="phoneNumber")
+
+	@Column(name = "phoneNumber")
 	private String phoneNumber;
-	
-	@Column(name="businessAddress")
+
+	@Column(name = "businessAddress")
 	private String businessAddress;
 
-	@ManyToOne
-	@JoinColumn(name="affiliateId")
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "affiliateId")
 	private Affiliate affiliate;
-	
-	@OneToOne
-	@JoinColumn(name="signatureId")
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "signatureId")
 	private DigitalSignature digitalSignature;
 
 	public int getAdvisorId() {
@@ -157,5 +160,5 @@ public class Advisor {
 				+ ", phoneNumber=" + phoneNumber + ", businessAddress=" + businessAddress + ", affiliate=" + affiliate
 				+ ", digitalSignature=" + digitalSignature + "]";
 	}
-	
+
 }

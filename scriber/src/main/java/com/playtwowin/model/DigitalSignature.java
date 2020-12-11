@@ -1,8 +1,10 @@
 package com.playtwowin.model;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
@@ -13,7 +15,7 @@ import javax.persistence.Table;
 public class DigitalSignature {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "signatureId")
 	private int signatureId;
 
@@ -25,20 +27,20 @@ public class DigitalSignature {
 
 	@Column(name = "title")
 	private String title;
-	
+
 	@Column(name = "affiliation")
 	private String affiliation;
-	
+
 	@Column(name = "email")
 	private String email;
-	
+
 	@Column(name = "website")
 	private String website;
-	
+
 	@Column(name = "socialmediaHandle")
 	private String socialmediaHandle;
 
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "advisorId")
 	private Advisor advisor;
 
@@ -134,4 +136,5 @@ public class DigitalSignature {
 				+ ", title=" + title + ", affiliation=" + affiliation + ", email=" + email + ", website=" + website
 				+ ", socialmediaHandle=" + socialmediaHandle + ", advisor=" + advisor + "]";
 	}
+
 }
