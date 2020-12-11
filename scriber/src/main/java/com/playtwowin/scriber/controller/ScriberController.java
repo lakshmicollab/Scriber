@@ -3,6 +3,7 @@ package com.playtwowin.scriber.controller;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.textract.AmazonTextract;
 import com.amazonaws.services.textract.AmazonTextractClientBuilder;
+import com.amazonaws.services.textract.model.Block;
 import com.amazonaws.services.textract.model.DetectDocumentTextRequest;
 import com.amazonaws.services.textract.model.DetectDocumentTextResult;
 import com.amazonaws.services.textract.model.Document;
@@ -15,15 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 @RestController
 public class ScriberController {
@@ -95,8 +93,17 @@ public class ScriberController {
 
         DetectDocumentTextResult result = client.detectDocumentText(request);
 
-        DocumentTextService documentTextService = new DocumentTextService(result,image);
+//        DocumentTextService documentTextService = new DocumentTextService(result,image);
 
-        System.out.println("This Content was Extracted from the Document: " + documentTextService.toString());
+        System.out.println("[This Content was Extracted from the Document]");
+
+        List<Block> resultBlockList = result.getBlocks();
+
+        // prints the documents content to the console
+        for( Block b : resultBlockList)
+            if(b.getText() != null && b.getBlockType().equals("LINE"))
+                System.out.println(b.getText());
+
+        System.out.println("[Document Text Detection Complete]");
     }
 }

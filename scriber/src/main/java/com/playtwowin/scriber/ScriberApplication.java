@@ -5,10 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import com.playtwowin.repo.UserRepository;
-
 @SpringBootApplication(scanBasePackages = "com.playtwowin")
-@EnableJpaRepositories(basePackageClasses = UserRepository.class)
+//@EnableJpaRepositories(basePackageClasses = UserRepository.class)
 @EntityScan(basePackages = "com.playtwowin")
 public class ScriberApplication {
 
