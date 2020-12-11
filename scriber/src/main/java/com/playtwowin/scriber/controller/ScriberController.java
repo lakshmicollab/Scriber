@@ -30,7 +30,7 @@ public class ScriberController {
     public String scribeApi(){
         return "scriber";
     }
-
+	 
 //    curl -k -X POST -F 'image=@/Pictures/running_cheetah.jpg' -v  http://localhost:8080/upload/
     @PostMapping("/upload")
     public String fileUploader(@RequestParam("file") MultipartFile multipartFile) {
