@@ -34,11 +34,6 @@
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
 		
-		<!--<dependency>-->
-			<!--<groupId>org.springframework.boot</groupId>-->
-			<!--<artifactId>spring-boot-starter-jdbc</artifactId>-->
-		<!--</dependency>-->
-		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -82,9 +77,33 @@
 			<artifactId>aws-java-sdk-textract</artifactId>
 			<version>1.11.915</version>
 		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-comprehend</artifactId>
+			<version>1.11.915</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-vision</artifactId>
+		</dependency>
+		<!-- [START_EXCLUDE] -->
+	</dependencies>
 
 		<!--aws sdk dependencies-->
-	</dependencies>
+
+	<!-- [START vision_install_with_bom] -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>16.1.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
