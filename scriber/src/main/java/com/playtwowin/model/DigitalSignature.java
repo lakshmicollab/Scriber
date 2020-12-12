@@ -19,11 +19,8 @@ public class DigitalSignature {
 	@Column(name = "signatureId")
 	private int signatureId;
 
-	@Column(name = "lastName")
-	private String lastName;
-
-	@Column(name = "firstName")
-	private String firstName;
+	@Column(name = "fullName")
+	private String fullName;
 
 	@Column(name = "title")
 	private String title;
@@ -52,20 +49,12 @@ public class DigitalSignature {
 		this.signatureId = signatureId;
 	}
 
-	public String getLastName() {
-		return lastName;
+	public String getFullName() {
+		return fullName;
 	}
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
 
 	public String getTitle() {
@@ -116,12 +105,11 @@ public class DigitalSignature {
 		this.advisor = advisor;
 	}
 
-	public DigitalSignature(int signatureId, String lastName, String firstName, String title, String affiliation,
-			String email, String website, String socialmediaHandle, Advisor advisor) {
+	public DigitalSignature(int signatureId, String fullName, String title, String affiliation, String email,
+			String website, String socialmediaHandle, Advisor advisor) {
 		super();
 		this.signatureId = signatureId;
-		this.lastName = lastName;
-		this.firstName = firstName;
+		this.fullName = fullName;
 		this.title = title;
 		this.affiliation = affiliation;
 		this.email = email;
@@ -132,9 +120,13 @@ public class DigitalSignature {
 
 	@Override
 	public String toString() {
-		return "DigitalSignature [signatureId=" + signatureId + ", lastName=" + lastName + ", firstName=" + firstName
-				+ ", title=" + title + ", affiliation=" + affiliation + ", email=" + email + ", website=" + website
-				+ ", socialmediaHandle=" + socialmediaHandle + ", advisor=" + advisor + "]";
+		return "DigitalSignature [signatureId=" + signatureId + ", fullName=" + fullName + ", title=" + title
+				+ ", affiliation=" + affiliation + ", email=" + email + ", website=" + website + ", socialmediaHandle="
+				+ socialmediaHandle + ", advisor=" + advisor + "]";
+	}
+
+	public DigitalSignature() {
+		super();
 	}
 
 }

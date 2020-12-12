@@ -153,6 +153,10 @@ public class Advisor {
 		this.digitalSignature = digitalSignature;
 	}
 
+	public Advisor() {
+		super();
+	}
+
 	@Override
 	public String toString() {
 		return "Advisor [advisorId=" + advisorId + ", approvedName=" + approvedName + ", type=" + type

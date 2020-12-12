@@ -2,7 +2,13 @@ package com.playtwowin.scriber.services;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 //import com.amazonaws.services.s3.AmazonS3;
@@ -160,4 +166,5 @@ public class DocumentTextService extends JPanel {
             System.out.println("    Page: " + block.getPage());
         System.out.println();
     }
+    
 }

@@ -168,6 +168,10 @@ public class Institution {
 		this.affiliate = affiliate;
 	}
 
+	public Institution() {
+		super();
+	}
+
 	@Override
 	public String toString() {
 		return "Institution [institutionId=" + institutionId + ", instituteName=" + instituteName + ", certification="

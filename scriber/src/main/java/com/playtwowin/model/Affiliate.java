@@ -1,6 +1,5 @@
 package com.playtwowin.model;
 
-import java.io.File;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -12,6 +11,10 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.amazonaws.services.codecommit.model.File;
 
 @Entity
 @Table(name = "Affiliate")
@@ -82,6 +85,10 @@ public class Affiliate {
 		this.affiliateInstitute = affiliateInstitute;
 		this.institution = institution;
 		this.advisor = advisor;
+	}
+
+	public Affiliate() {
+		super();
 	}
 
 	@Override

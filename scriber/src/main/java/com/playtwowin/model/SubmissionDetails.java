@@ -3,6 +3,8 @@ package com.playtwowin.model;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -11,25 +13,36 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="submissionDetails")
+@Table(name = "submissionDetails")
 public class SubmissionDetails {
-	
+
+	private enum sentimentScore {
+		POSITIVE, NEGATIVE, NEUTRAL, MIXED
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name="detailId")
+	@Column(name = "detailId")
 	private int detailId;
-	
-	@Column(name="wordCount")
+
+	@Column(name = "wordCount")
 	private int wordCount;
-	
-	@Column(name="compliantWordCount")
+
+	@Column(name = "compliantWordCount")
 	private int compliantWordCount;
-	
-	@Column(name="nonCompliantWordCount")
+
+	@Column(name = "nonCompliantWordCount")
 	private int nonCompliantWordCount;
 	
+	@Column(name = "sentimentScore")
+	@Enumerated(EnumType.STRING)
+	private sentimentScore sentimentScore;
+	
+	@Column(name = "confidencePercent")
+	private double confidencePercent;
+	
 	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name="submissionId")
+	@JoinColumn(name = "submissionId")
 	private SubmittedFile submittedFile;
 
 	public int getDetailId() {
@@ -72,20 +85,34 @@ public class SubmissionDetails {
 		this.submittedFile = submittedFile;
 	}
 
+	public sentimentScore getSentimentScore() {
+		return sentimentScore;
+	}
+
+	public void setSentimentScore(sentimentScore sentimentScore) {
+		this.sentimentScore = sentimentScore;
+	}
+
 	public SubmissionDetails(int detailId, int wordCount, int compliantWordCount, int nonCompliantWordCount,
-			SubmittedFile submittedFile) {
+			SubmittedFile submittedFile, com.playtwowin.model.SubmissionDetails.sentimentScore sentimentScore) {
 		super();
 		this.detailId = detailId;
 		this.wordCount = wordCount;
 		this.compliantWordCount = compliantWordCount;
 		this.nonCompliantWordCount = nonCompliantWordCount;
 		this.submittedFile = submittedFile;
+		this.sentimentScore = sentimentScore;
 	}
 
 	@Override
 	public String toString() {
 		return "SubmissionDetails [detailId=" + detailId + ", wordCount=" + wordCount + ", compliantWordCount="
 				+ compliantWordCount + ", nonCompliantWordCount=" + nonCompliantWordCount + ", submittedFile="
-				+ submittedFile + "]";
+				+ submittedFile + ", sentimentScore=" + sentimentScore + "]";
 	}
+
+	public SubmissionDetails() {
+		super();
+	}
+
 }
