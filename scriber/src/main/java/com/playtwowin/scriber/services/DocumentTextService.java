@@ -2,10 +2,19 @@ package com.playtwowin.scriber.services;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 //import com.amazonaws.services.s3.AmazonS3;
@@ -80,4 +89,5 @@ public class DocumentTextService {
 //        DocumentTextService result;
         return result;
     }
+    
 }
