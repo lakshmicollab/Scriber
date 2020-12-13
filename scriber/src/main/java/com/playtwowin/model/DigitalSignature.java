@@ -28,6 +28,9 @@ public class DigitalSignature {
 	@Column(name = "affiliation")
 	private String affiliation;
 
+	@Column(name = "phonenumber")
+	private String phoneNumber;
+
 	@Column(name = "email")
 	private String email;
 
@@ -37,12 +40,38 @@ public class DigitalSignature {
 	@Column(name = "socialmediaHandle")
 	private String socialmediaHandle;
 
+	@Column(name = "address")
+	private String address;
+
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "advisorId")
 	private Advisor advisor;
 
 	public int getSignatureId() {
 		return signatureId;
+	}
+
+	public DigitalSignature(int signatureId, String fullName, String title, String affiliation, String phoneNumber,
+			String email, String website, String socialmediaHandle, String address, Advisor advisor) {
+		super();
+		this.signatureId = signatureId;
+		this.fullName = fullName;
+		this.title = title;
+		this.affiliation = affiliation;
+		this.phoneNumber = phoneNumber;
+		this.email = email;
+		this.website = website;
+		this.socialmediaHandle = socialmediaHandle;
+		this.address = address;
+		this.advisor = advisor;
+	}
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
 	}
 
 	public void setSignatureId(int signatureId) {
@@ -97,6 +126,14 @@ public class DigitalSignature {
 		this.socialmediaHandle = socialmediaHandle;
 	}
 
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
 	public Advisor getAdvisor() {
 		return advisor;
 	}
@@ -105,28 +142,16 @@ public class DigitalSignature {
 		this.advisor = advisor;
 	}
 
-	public DigitalSignature(int signatureId, String fullName, String title, String affiliation, String email,
-			String website, String socialmediaHandle, Advisor advisor) {
+	public DigitalSignature() {
 		super();
-		this.signatureId = signatureId;
-		this.fullName = fullName;
-		this.title = title;
-		this.affiliation = affiliation;
-		this.email = email;
-		this.website = website;
-		this.socialmediaHandle = socialmediaHandle;
-		this.advisor = advisor;
 	}
 
 	@Override
 	public String toString() {
 		return "DigitalSignature [signatureId=" + signatureId + ", fullName=" + fullName + ", title=" + title
-				+ ", affiliation=" + affiliation + ", email=" + email + ", website=" + website + ", socialmediaHandle="
-				+ socialmediaHandle + ", advisor=" + advisor + "]";
-	}
-
-	public DigitalSignature() {
-		super();
+				+ ", affiliation=" + affiliation + ", phoneNumber=" + phoneNumber + ", email=" + email + ", website="
+				+ website + ", socialmediaHandle=" + socialmediaHandle + ", address=" + address + ", advisor=" + advisor
+				+ "]";
 	}
 
 }
