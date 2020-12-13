@@ -23,10 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -41,7 +38,14 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 @RestController
+@RequestMapping("/api")
+@Api(value="scriber")
 public class ScriberController {
 
   
@@ -61,6 +65,7 @@ public class ScriberController {
 
     // testing out AWS Textract
     @PostMapping("/doc-upload")
+    @ApiOperation(value = "upload a file")
     public void documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile) throws Exception {
 
         // Serialize the uploaded file
@@ -139,45 +144,45 @@ public class ScriberController {
 
     }
 
-	@PostMapping("/doc-upload-2")
-	public ResponseEntity<ArrayList<String>> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
-			throws Exception {
-
-		ByteBuffer imageBytes;
-		BufferedImage image;
-
-		try (InputStream inputStream = multipartFile.getInputStream()) {
-			imageBytes = ByteBuffer.wrap(IOUtils.toByteArray(inputStream));
-			image = ImageIO.read(inputStream);
-		}
-
-		// Call DetectDocumentText
-		AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
-				"https://textract.us-east-1.amazonaws.com", "us-east-1");
-		AmazonTextract client = AmazonTextractClientBuilder.standard().withEndpointConfiguration(endpoint).build();
-
-		DetectDocumentTextRequest request = new DetectDocumentTextRequest()
-				.withDocument(new Document().withBytes(imageBytes));
-
-		DetectDocumentTextResult result = client.detectDocumentText(request);
-
-		System.out.println("[This Content was Extracted from the Document]");
-
-		List<Block> resultBlockList = result.getBlocks();
-
-		ArrayList<String> output = new ArrayList<String>();
-		// prints the documents content to the console
-		for (Block b : resultBlockList) {
-			if (b.getText() != null && b.getBlockType().equals("LINE")) {
-				System.out.println(b.getText());
-				
-				output.add(b.getText());
-			}
-		}
-
-		System.out.println("[Document Text Detection Complete]");
-
-		return new ResponseEntity<ArrayList<String>>(output, HttpStatus.OK);
-	}
+//	@PostMapping("/doc-upload-2")
+//	public ResponseEntity<ArrayList<String>> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
+//			throws Exception {
+//
+//		ByteBuffer imageBytes;
+//		BufferedImage image;
+//
+//		try (InputStream inputStream = multipartFile.getInputStream()) {
+//			imageBytes = ByteBuffer.wrap(IOUtils.toByteArray(inputStream));
+//			image = ImageIO.read(inputStream);
+//		}
+//
+//		// Call DetectDocumentText
+//		AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
+//				"https://textract.us-east-1.amazonaws.com", "us-east-1");
+//		AmazonTextract client = AmazonTextractClientBuilder.standard().withEndpointConfiguration(endpoint).build();
+//
+//		DetectDocumentTextRequest request = new DetectDocumentTextRequest()
+//				.withDocument(new Document().withBytes(imageBytes));
+//
+//		DetectDocumentTextResult result = client.detectDocumentText(request);
+//
+//		System.out.println("[This Content was Extracted from the Document]");
+//
+//		List<Block> resultBlockList = result.getBlocks();
+//
+//		ArrayList<String> output = new ArrayList<String>();
+//		// prints the documents content to the console
+//		for (Block b : resultBlockList) {
+//			if (b.getText() != null && b.getBlockType().equals("LINE")) {
+//				System.out.println(b.getText());
+//
+//				output.add(b.getText());
+//			}
+//		}
+//
+//		System.out.println("[Document Text Detection Complete]");
+//
+//		return new ResponseEntity<ArrayList<String>>(output, HttpStatus.OK);
+//	}
 
 }
