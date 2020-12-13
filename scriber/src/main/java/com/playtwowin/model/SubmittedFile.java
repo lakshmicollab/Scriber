@@ -22,8 +22,8 @@ public class SubmittedFile {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name = "userId")
-	private int userId;
+	@Column(name = "fileId")
+	private int fileId;
 
 	@Column(name = "fileName")
 	private String fileName;
@@ -36,12 +36,24 @@ public class SubmittedFile {
 	@JoinColumn(name = "detailId")
 	private SubmissionDetails submissionDetails;
 
-	public int getUserId() {
-		return userId;
+	public SubmittedFile(int fileId, String fileName, complianceStatus status, SubmissionDetails submissionDetails) {
+		super();
+		this.fileId = fileId;
+		this.fileName = fileName;
+		this.status = status;
+		this.submissionDetails = submissionDetails;
 	}
 
-	public void setUserId(int userId) {
-		this.userId = userId;
+	public SubmittedFile() {
+		super();
+	}
+
+	public int getFileId() {
+		return fileId;
+	}
+
+	public void setFileId(int fileId) {
+		this.fileId = fileId;
 	}
 
 	public String getFileName() {
@@ -68,23 +80,10 @@ public class SubmittedFile {
 		this.submissionDetails = submissionDetails;
 	}
 
-
 	@Override
 	public String toString() {
-		return "SubmittedFile [userId=" + userId + ", fileName=" + fileName + ", status=" + status
-				+ ", submissionDetails=" + submissionDetails + "," + "]";
+		return "SubmittedFile [fileId=" + fileId + ", fileName=" + fileName + ", status=" + status
+				+ ", submissionDetails=" + submissionDetails + "]";
 	}
-
-	public SubmittedFile(int userId, String fileName, complianceStatus status, SubmissionDetails submissionDetails) {
-		super();
-		this.userId = userId;
-		this.fileName = fileName;
-		this.status = status;
-		this.submissionDetails = submissionDetails;
-	}
-
-	public SubmittedFile() {
-		super();
-	}
-
+	
 }

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.4.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.play-two-win</groupId>
 	<artifactId>scriber</artifactId>
@@ -23,7 +24,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
 		</dependency>
-		
+
 		<!-- dependency added -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -33,7 +34,7 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -49,22 +50,28 @@
 			<scope>test</scope>
 		</dependency>
 
-        <!--aws sdk dependencies-->
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>bom</artifactId>
-            <version>2.15.43</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
+		<!--aws sdk dependencies -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>bom</artifactId>
+			<version>2.15.43</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/software.amazon.awssdk/textract -->
-<dependency>
-    <groupId>software.amazon.awssdk</groupId>
-    <artifactId>textract</artifactId>
-    <version>2.15.43</version>
-</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>textract</artifactId>
+			<version>2.15.43</version>
+		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox -->
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>2.0.21</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk -->
 		<dependency>
@@ -77,6 +84,9 @@
 			<artifactId>aws-java-sdk-textract</artifactId>
 			<version>1.11.915</version>
 		</dependency>
+		
+		
+		
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-comprehend</artifactId>
@@ -90,7 +100,7 @@
 		<!-- [START_EXCLUDE] -->
 	</dependencies>
 
-		<!--aws sdk dependencies-->
+	<!--aws sdk dependencies -->
 
 	<!-- [START vision_install_with_bom] -->
 	<dependencyManagement>
