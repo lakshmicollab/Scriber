@@ -38,6 +38,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.services.textract.model.DetectDocumentTextRequest;
 import software.amazon.awssdk.services.textract.model.DetectDocumentTextResponse;
 import software.amazon.awssdk.services.textract.model.Document;
@@ -47,10 +48,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -92,6 +89,8 @@ public class ScriberController {
 	
 	@Autowired
 	SubmissionDetailsRepo submittedDetailsRepo;
+
+	String bucketName = "logostoragehackengers";
 	
 	static List<String> noWords = new ArrayList<>(List.of(
 			"Achieve",           
@@ -112,6 +111,15 @@ public class ScriberController {
 			"Pease of mind",
 			"sleep at night"
 			));
+
+//	String recommendText = "\"not\" is usually unnecessary - to decide if it is needed,\n" +
+//			"substitute \"if\" for \"whether,\" and if the \"if\" results in a different\n" +
+//			"\"meaning, \"or not\" is needed";
+
+//	Map<String, String> noNoMap = new HashMap<>();
+//		noNoMap.put("not", recommendText);
+//        noNoMap.put("whether",recommendText);
+
 
 //    curl -k -X POST -F 'image=@/Pictures/running_cheetah.jpg' -v  http://localhost:8080/upload/
 
@@ -172,11 +180,14 @@ public class ScriberController {
 	 */
   
     // testing out AWS Textract
-    @PostMapping("/doc-upload")
+    @PostMapping("/doc-upload-0")
     public void documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile) throws Exception {
 
         // Testing color recognition
 //        colorRecognition(multipartFile);
+
+		// Upload file to s3
+//		documentTextService.uploadToS3(bucketName, multipartFile.getOriginalFilename(), multipartFile);
 
 
         // Serialize the uploaded file
@@ -206,11 +217,11 @@ public class ScriberController {
 
         System.out.println("Start: Sentiment Analysis Test 1");
         System.out.println("[LINE Entity Detection Start]");
-        for( Block b : resultBlockList)
-            if(b.getText() != null && b.getBlockType().equals("LINE")) {
-                System.out.println(b.getText());
-                sentimentAnalysis(b.getText());
-                entityDetection(b.getText());}
+//        for( Block b : resultBlockList)
+//            if(b.getText() != null && b.getBlockType().equals("LINE")) {
+//                System.out.println(b.getText());
+//                sentimentAnalysis(b.getText());
+//                entityDetection(b.getText());}
         System.out.println("[LINE Entity Detection End]");
         System.out.println("End: Sentiment Analysis Test 1\n");
 
@@ -218,11 +229,11 @@ public class ScriberController {
 
         System.out.println("Start: Sentiment Analysis Test 2");
         System.out.println("\n\n[WORD Entity Detection Start]");
-        for( Block b : resultBlockList)
-            if(b.getText() != null && b.getBlockType().equals("WORD")) {
-                System.out.println(b.getText());
-                sentimentAnalysis(b.getText());
-                entityDetection(b.getText());}
+//        for( Block b : resultBlockList)
+//            if(b.getText() != null && b.getBlockType().equals("WORD")) {
+//                System.out.println(b.getText());
+//                sentimentAnalysis(b.getText());
+//                entityDetection(b.getText());}
         System.out.println("[WORD Entity Detection End]");
         System.out.println("End: Sentiment Analysis Test 2\n");
 
@@ -304,7 +315,7 @@ public class ScriberController {
         AmazonComprehend comprehendClient =
                 AmazonComprehendClientBuilder.standard()
                         .withCredentials(awsCreds)
-                        .withRegion("us-east-1")
+                        .withRegion("us-west-2")
                         .build();
         return comprehendClient;
     }
@@ -353,9 +364,14 @@ meaning, “or not” is needed
 
     }
 
-	@PostMapping("/doc-upload-2")
-	public ResponseEntity<ArrayList<String>> documentUploaderSimple2(@RequestParam("file") MultipartFile multipartFile)
+	@PostMapping("/doc-upload")
+	public ResponseEntity<FinalView> documentUploaderSimple2(@RequestParam("file") MultipartFile multipartFile, @RequestParam("fileType") String fileType)
 			throws Exception {
+
+    	if(fileType.equals("document")){
+			// Upload file to s3
+			documentTextService.uploadToS3(bucketName, multipartFile.getOriginalFilename(), multipartFile);
+		}
 		
 		// output PDF or IMAGE
 		System.out.println(multipartFile.getContentType());
@@ -366,9 +382,9 @@ meaning, “or not” is needed
 		// assign the file name to be used in ovr
 		String fileName = multipartFile.getOriginalFilename();
 
-		String bucketName = "s3://document-bucket-1";
+//		String bucketName = "s3://document-bucket-1";
 
-		String outputFileName = "outputFile";
+//		String outputFileName = "outputFile";
 
 		ArrayList<Entity> entityList = new ArrayList<Entity>();
 		DigitalSignature ds = new DigitalSignature();
@@ -403,7 +419,10 @@ meaning, “or not” is needed
 
 			// Testing out aws comprehend
 			System.out.println("Start: Sentiment Analysis Test 1");
-			sentimentAnalysis(resultBlockList.get(1).getText(), sd);
+//			sentimentAnalysis(resultBlockList.get(1).getText(), sd);
+			// ****************************
+//			fv.setRecommendation(sentimentAnalysis());
+			// ****************************
 			System.out.println("End: Sentiment Analysis Test 1\n");
 
 			System.out.println("[LINE Entity Detection Start]");
@@ -427,11 +446,14 @@ meaning, “or not” is needed
 				if (b.getText() != null && b.getBlockType().equals("WORD")) {
 					//System.out.println(b.getText());
 					wordCounter++;
-					for(String i : newNoList) {
-						if(b.getText().equals(i)) {
+//					for(String i : newNoList) {
+//						if(b.getText().equals(i)) {
+							if(!sentimentAnalysis(b.getText(),sd).equals("")) {
+								fv.setRecommendation(sentimentAnalysis(b.getText(), sd));
 							noWordCount++;
-						}
-					}
+							}
+//						}
+//					}
 				}
 			}
 			int compliantWordCount = wordCounter - noWordCount;
@@ -454,22 +476,33 @@ meaning, “or not” is needed
 		} 
 		
 		else {
-			byte[] image = multipartFile.getBytes();
-			UploadToS3(bucketName, fileName, multipartFile.getContentType(), image);
+//			byte[] image = multipartFile.getBytes();
+//			UploadToS3(bucketName, fileName, multipartFile.getContentType(), image);
 			System.out.println("application is pdf, running the PDFRunner...");
-			PDFRunner(bucketName, fileName, outputFileName);
+//			PDFRunner(bucketName, fileName, outputFileName);
 		}
 		return new ResponseEntity<FinalView>(fv, HttpStatus.OK);
 
 	}
 
-	public static AmazonComprehend amazonComprehend() {
-		AmazonComprehend comprehendClient = AmazonComprehendClientBuilder.standard().withCredentials(awsCreds)
-				.withRegion("us-west-2").build();
-		return comprehendClient;
-	}
+//	public static AmazonComprehend amazonComprehend() {
+//		AmazonComprehend comprehendClient = AmazonComprehendClientBuilder.standard().withCredentials(awsCreds)
+//				.withRegion("us-west-2").build();
+//		return comprehendClient;
+//	}
 
-	public void sentimentAnalysis(String text, SubmissionDetails sd) {
+	public String sentimentAnalysis(String text, SubmissionDetails sd) {
+
+		List<String> noNoWords = new ArrayList<>();
+		noNoWords.add("not");
+		noNoWords.add("whether");
+//        Map<String, String > noNoMap = new HashMap<>();
+//
+		String recommendText = "\"not\" is usually unnecessary - to decide if it is needed,\n" +
+				"substitute \"if\" for \"whether,\" and if the \"if\" results in a different\n" +
+				"\"meaning, \"or not\" is needed";
+//        noNoMap.put("not", recommendText);
+//        noNoMap.put("whether",recommendText);
 
 		AmazonComprehend comprehendClient = amazonComprehend();
 
@@ -479,9 +512,14 @@ meaning, “or not” is needed
 				.withLanguageCode("en");
 		DetectSentimentResult detectSentimentResult = comprehendClient.detectSentiment(detectSentimentRequest);
 		sd.setSentimentScore(detectSentimentResult.getSentiment());
-		System.out.println(detectSentimentResult);
+//		System.out.println(detectSentimentResult);
+		String recommendation = detectSentimentResult.getSentiment().equals("NEGATIVE") ? "THE SENTIMENT WAS: " + detectSentimentResult.getSentiment() + ", \nTHE NEGATIVE TEXT READS: " + text : "";
+		System.out.println(detectSentimentResult.getSentiment().equals("NEGATIVE") ? "THE SENTIMENT WAS: " + detectSentimentResult.getSentiment() + ", \nTHE NEGATIVE TEXT READS: " + text : "");
+		System.out.println(noNoWords.contains(text) ? "Recommendation: " + recommendText: "");
 		System.out.println("End of DetectSentiment\n");
 		System.out.println("Done");
+
+		return recommendation;
 	}
 
 	// original method of entityDetection(String text)
