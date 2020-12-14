@@ -40,6 +40,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.services.textract.model.DetectDocumentTextRequest;
 import software.amazon.awssdk.services.textract.model.DetectDocumentTextResponse;
 import software.amazon.awssdk.services.textract.model.Document;
@@ -49,10 +50,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -375,7 +372,7 @@ meaning, “or not” is needed
 
     	if(fileType.equals("document")){
 			// Upload file to s3
-			documentTextService.uploadToS3(bucketName, multipartFile.getOriginalFilename(), multipartFile);
+			// documentTextService.uploadToS3(bucketName, multipartFile.getOriginalFilename(), multipartFile);
 		}
 
 		// output PDF or IMAGE
