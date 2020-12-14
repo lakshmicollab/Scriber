@@ -252,11 +252,14 @@ public class DocumentTextService {
 		}
 
 		if(fv.getRecommendation() != null) {
+			fv.setStatus("NOT APPROVED");
+		} else {
 			fv.setStatus("APPROVED");
 		}
-		else if(fv.getFileName().equals("martial-arts.jpg")) {
+
+		if(fv.getFileName().equals("martial-arts.jpg")) {
 			fv.setCompany(null);
-			fv.setStatus("rejected");
+			fv.setStatus("NOT APPROVED");
 			fv.setRecommendation("fix: " + fv.getCompany());
 		}
 		

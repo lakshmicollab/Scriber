@@ -36,6 +36,9 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.textract.model.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.web.bind.annotation.*;
@@ -55,8 +58,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -66,9 +67,6 @@ import java.awt.image.ImageObserver;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -431,6 +429,11 @@ meaning, “or not” is needed
 					// System.out.println(b.getText());
 					entityDetection(b.getText(), entityList);
 					// adds the entities to the list initialized above
+					String[] strArr = b.getText().split(" ");
+					List arrayList = Arrays.asList(strArr);
+					if(arrayList.contains("not")) {
+						fv.setRecommendation(sentimentAnalysis(b.getText(), sd));
+					}
 				}
 			}
 			System.out.println("[LINE Entity Detection End]");
@@ -449,8 +452,8 @@ meaning, “or not” is needed
 //					for(String i : newNoList) {
 //						if(b.getText().equals(i)) {
 							if(!sentimentAnalysis(b.getText(),sd).equals("")) {
-								fv.setRecommendation(sentimentAnalysis(b.getText(), sd));
-							noWordCount++;
+//								fv.setRecommendation(sentimentAnalysis(b.getText(), sd));
+								noWordCount++;
 							}
 //						}
 //					}
@@ -498,9 +501,9 @@ meaning, “or not” is needed
 		noNoWords.add("whether");
 //        Map<String, String > noNoMap = new HashMap<>();
 //
-		String recommendText = "\"not\" is usually unnecessary - to decide if it is needed,\n" +
-				"substitute \"if\" for \"whether,\" and if the \"if\" results in a different\n" +
-				"\"meaning, \"or not\" is needed";
+		String recommendText = "not is usually unnecessary - to decide if it is needed," +
+				"substitute if for whether, and if the if results in a different" +
+				"meaning, or not is needed";
 //        noNoMap.put("not", recommendText);
 //        noNoMap.put("whether",recommendText);
 
@@ -519,7 +522,7 @@ meaning, “or not” is needed
 		System.out.println("End of DetectSentiment\n");
 		System.out.println("Done");
 
-		return recommendation;
+		return recommendText;
 	}
 
 	// original method of entityDetection(String text)
