@@ -250,6 +250,10 @@ public class DocumentTextService {
 			fv.setStatus("approved");
 //			fv.setRecommendation("Document Approved");
 		}
+
+		if(fv.getRecommendation() != null) {
+			fv.setStatus("APPROVED");
+		}
 		else if(fv.getFileName().equals("martial-arts.jpg")) {
 			fv.setCompany(null);
 			fv.setStatus("rejected");
