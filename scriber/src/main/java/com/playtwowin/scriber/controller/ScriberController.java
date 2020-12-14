@@ -11,9 +11,18 @@ import com.amazonaws.services.comprehend.model.DetectEntitiesResult;
 import com.amazonaws.services.comprehend.model.DetectSentimentRequest;
 import com.amazonaws.services.comprehend.model.DetectSentimentResult;
 import com.amazonaws.services.comprehend.model.Entity;
+import com.amazonaws.services.rekognition.AmazonRekognition;
+import com.amazonaws.services.rekognition.AmazonRekognitionClientBuilder;
+import com.amazonaws.services.rekognition.model.*;
+import com.amazonaws.services.rekognition.model.Image;
+import com.amazonaws.services.textract.model.BoundingBox;
 import com.amazonaws.services.textract.model.DetectDocumentTextResult;
+//import com.amazonaws.services.textract.model.S3Object;
 import com.amazonaws.services.textract.model.StartDocumentTextDetectionRequest;
 import com.amazonaws.services.textract.model.StartDocumentTextDetectionResult;
+import com.amazonaws.services.rekognition.model.S3Object;
+import com.amazonaws.waiters.Waiter;
+import com.amazonaws.waiters.WaiterParameters;
 import com.playtowin.repository.DigitalSignatureRepo;
 import com.playtowin.repository.SubmissionDetailsRepo;
 import com.playtowin.repository.SubmittedFileRepo;
@@ -88,8 +97,17 @@ public class ScriberController {
 	@Autowired
 	SubmissionDetailsRepo submittedDetailsRepo;
 
+	AmazonRekognition rekognitionClient = AmazonRekognitionClientBuilder.standard().withCredentials(awsCreds)
+			.withRegion("us-west-2").build();
+
 	String bucketName = "logostoragehackengers";
-	
+
+	String awsRekognitionARN = "arn:aws:rekognition:us-west-2:724053722933:project/bank-of-america/version/bank-of-america.2020-12-13T23.10.49/1607919049727";
+	//
+	String awsProjectARN = "arn:aws:rekognition:us-west-2:724053722933:project/bank-of-america/version/bank-of-america.2020-12-13T23.10.49/";
+
+	String versionName = "bank-of-america.2020-12-13T23.10.49";
+
 	static List<String> noWords = new ArrayList<>(List.of(
 			"Achieve",           
 			"unique",
@@ -362,15 +380,96 @@ meaning, “or not” is needed
 
     }
 
+    public void awsRekognitionSetup(){
+//		AmazonRekognition rekognitionClient = AmazonRekognitionClientBuilder.defaultClient();
+
+		StartProjectVersionRequest request = new StartProjectVersionRequest()
+				.withMinInferenceUnits(1)
+				.withProjectVersionArn(awsRekognitionARN);
+		// *******************************************************
+		try{
+
+			StartProjectVersionResult result = rekognitionClient.startProjectVersion(request);
+
+			System.out.println("Status: " + result.getStatus());
+			while(result.getStatus() != "STARTING"){
+				System.out.print(".");
+				Thread.sleep(500);
+			}
+			System.out.println("Status: " + result.getStatus());
+
+			DescribeProjectVersionsRequest describeProjectVersionsRequest = new DescribeProjectVersionsRequest()
+					.withVersionNames(versionName)
+					.withProjectArn(awsProjectARN);
+
+
+			Waiter<DescribeProjectVersionsRequest> waiter = rekognitionClient.waiters().projectVersionRunning();
+			waiter.run(new WaiterParameters<>(describeProjectVersionsRequest));
+
+
+			DescribeProjectVersionsResult response=rekognitionClient.describeProjectVersions(describeProjectVersionsRequest);
+
+			for(ProjectVersionDescription projectVersionDescription: response.getProjectVersionDescriptions() )
+			{
+				System.out.println("Status: " + projectVersionDescription.getStatus());
+			}
+			System.out.println("Done...");
+
+		} catch(Exception e) {
+			System.out.println(e.toString());
+		}
+	}
+
+	public void awsRekognitionStop() {
+//		AmazonRekognition rekognitionClient = AmazonRekognitionClientBuilder.defaultClient();
+
+		try {
+
+			StopProjectVersionRequest request = new StopProjectVersionRequest()
+					.withProjectVersionArn(awsProjectARN);
+			StopProjectVersionResult result = rekognitionClient.stopProjectVersion(request);
+
+			System.out.println(result.getStatus());
+
+		} catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		System.out.println("Done...");
+	}
+
 	@PostMapping("/doc-upload")
 	public ResponseEntity<FinalView> documentUploaderSimple2(@RequestParam("file") MultipartFile multipartFile, @RequestParam("fileType") String fileType)
 			throws Exception {
 
-    	if(fileType.equals("document")){
+
+		// *******************************************************
+
+    	// arn:aws:rekognition:us-west-2:724053722933:project/bank-of-america/version/bank-of-america.2020-12-13T23.10.49/1607919049727
+		awsRekognitionSetup();
+//    	if(fileType.equals("document")){
 			// Upload file to s3
 			documentTextService.uploadToS3(bucketName, multipartFile.getOriginalFilename(), multipartFile);
-		}
-		
+//		}
+		float i = 1;
+		// *****************************************
+		DetectCustomLabelsRequest request = new DetectCustomLabelsRequest()
+				.withProjectVersionArn(awsRekognitionARN)
+				.withImage(new Image().withS3Object(new S3Object().withName(multipartFile.getOriginalFilename()).withBucket(bucketName)))
+				.withMinConfidence(i);
+
+//		width = image.getWidth();getWidth
+//		height = image.getHeight();
+
+		// Call DetectCustomLabels
+//		AmazonRekognition amazonRekognition = AmazonRekognitionClientBuilder.standard().withCredentials(awsCreds)
+//				.withRegion("us-west-2").build();
+		DetectCustomLabelsResult result1 = rekognitionClient.detectCustomLabels(request);
+		System.out.println(result1);
+
+		// *****************************************
+		awsRekognitionStop();
+
+
 		// output PDF or IMAGE
 		System.out.println(multipartFile.getContentType());
 
@@ -493,6 +592,8 @@ meaning, “or not” is needed
 //				.withRegion("us-west-2").build();
 //		return comprehendClient;
 //	}
+	//.withEndpointConfiguration(endpoint).build();AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
+	//				"https://textract.us-west-2.amazonaws.com", "us-west-2");
 
 	public String sentimentAnalysis(String text, SubmissionDetails sd) {
 
@@ -504,8 +605,6 @@ meaning, “or not” is needed
 		String recommendText = "not is usually unnecessary - to decide if it is needed," +
 				"substitute if for whether, and if the if results in a different" +
 				"meaning, or not is needed";
-//        noNoMap.put("not", recommendText);
-//        noNoMap.put("whether",recommendText);
 
 		AmazonComprehend comprehendClient = amazonComprehend();
 
@@ -579,6 +678,8 @@ meaning, “or not” is needed
 			System.out.println("Processed page index: " + page);
 		}
 	}
+	//.withEndpointConfiguration(endpoint).build();AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
+	//				"https://textract.us-west-2.amazonaws.com", "us-west-2");
 
 	private List<ArrayList<TextLine>> extractText(String bucketName, String documentName) throws InterruptedException {
 
@@ -591,7 +692,7 @@ meaning, “or not” is needed
 
 		StartDocumentTextDetectionRequest req = new StartDocumentTextDetectionRequest()
 				.withDocumentLocation(new DocumentLocation()
-						.withS3Object(new S3Object().withBucket(bucketName).withName(documentName)))
+						.withS3Object(new com.amazonaws.services.textract.model.S3Object().withBucket(bucketName).withName(documentName)))
 				.withJobTag("DetectingText");
 
 		StartDocumentTextDetectionResult startDocumentTextDetectionResult = client.startDocumentTextDetection(req);
