@@ -16,10 +16,6 @@ import javax.persistence.Table;
 @Table(name = "SubmittedFiles")
 public class SubmittedFile {
 
-	private enum complianceStatus {
-		APPROVED, PENDING, REJECTED
-	};
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "fileId")
@@ -29,24 +25,11 @@ public class SubmittedFile {
 	private String fileName;
 
 	@Column(name = "complianceStatus")
-	@Enumerated(EnumType.STRING)
-	private complianceStatus status;
+	private String status;
 
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "detailId")
 	private SubmissionDetails submissionDetails;
-
-	public SubmittedFile(int fileId, String fileName, complianceStatus status, SubmissionDetails submissionDetails) {
-		super();
-		this.fileId = fileId;
-		this.fileName = fileName;
-		this.status = status;
-		this.submissionDetails = submissionDetails;
-	}
-
-	public SubmittedFile() {
-		super();
-	}
 
 	public int getFileId() {
 		return fileId;
@@ -64,11 +47,11 @@ public class SubmittedFile {
 		this.fileName = fileName;
 	}
 
-	public complianceStatus getStatus() {
+	public String getStatus() {
 		return status;
 	}
 
-	public void setStatus(complianceStatus status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
 
@@ -85,5 +68,17 @@ public class SubmittedFile {
 		return "SubmittedFile [fileId=" + fileId + ", fileName=" + fileName + ", status=" + status
 				+ ", submissionDetails=" + submissionDetails + "]";
 	}
-	
+
+	public SubmittedFile(int fileId, String fileName, String status, SubmissionDetails submissionDetails) {
+		super();
+		this.fileId = fileId;
+		this.fileName = fileName;
+		this.status = status;
+		this.submissionDetails = submissionDetails;
+	}
+
+	public SubmittedFile() {
+		super();
+	}
+
 }

@@ -15,12 +15,15 @@ import com.amazonaws.services.textract.model.DetectDocumentTextResult;
 import com.amazonaws.services.textract.model.StartDocumentTextDetectionRequest;
 import com.amazonaws.services.textract.model.StartDocumentTextDetectionResult;
 import com.playtowin.repository.DigitalSignatureRepo;
+import com.playtowin.repository.SubmissionDetailsRepo;
 import com.playtowin.repository.SubmittedFileRepo;
 import com.playtwowin.model.DigitalSignature;
+import com.playtwowin.model.FinalView;
 import com.playtwowin.model.ImageType;
 import com.playtwowin.model.SubmittedFile;
 import com.playtwowin.model.TextLine;
 import com.playtwowin.model.OverViewResponse;
+import com.playtwowin.model.SubmissionDetails;
 import com.playtwowin.scriber.services.DocumentTextService;
 import com.playtwowin.scriber.services.PDFService;
 import com.amazonaws.services.textract.AmazonTextract;
@@ -73,6 +76,29 @@ public class ScriberController {
 
 	@Autowired
 	SubmittedFileRepo submittedFileRepo;
+	
+	@Autowired
+	SubmissionDetailsRepo submittedDetailsRepo;
+	
+	static List<String> noWords = new ArrayList<>(List.of(
+			"Achieve",           
+			"unique",
+			"predict",
+			"Achieve",
+			"realize",
+			"reach",
+			"ensure",
+			"meet",
+			"unique",	
+			"innovative",
+			"revolutionary",	
+			"unparalleled",
+			"one of a kind",
+			"cutting edge",
+			"state of the art",	
+			"Pease of mind",
+			"sleep at night"
+			));
 
 //    curl -k -X POST -F 'image=@/Pictures/running_cheetah.jpg' -v  http://localhost:8080/upload/
 	@PostMapping("/upload")
@@ -131,11 +157,9 @@ public class ScriberController {
 	 * }
 	 */
 	@PostMapping("/doc-upload")
-	public ResponseEntity<OverViewResponse> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
+	public ResponseEntity<FinalView> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
 			throws Exception {
-
-		// Serialize the uploaded file
-
+		
 		// output PDF or IMAGE
 		System.out.println(multipartFile.getContentType());
 
@@ -146,18 +170,25 @@ public class ScriberController {
 		String fileName = multipartFile.getOriginalFilename();
 
 		String bucketName = "s3://document-bucket-1";
-		
+
 		String outputFileName = "outputFile";
 
-		int docCounter = 0;
 		ArrayList<Entity> entityList = new ArrayList<Entity>();
 		DigitalSignature ds = new DigitalSignature();
 		SubmittedFile sf = new SubmittedFile();
+		SubmissionDetails sd = new SubmissionDetails();
 		OverViewResponse ovr = new OverViewResponse();
-		
+		FinalView fv = new FinalView();
+
 		ovr.setFileName(fileName);
 		sf.setFileName(fileName);
+		fv.setFileName(fileName);
 		
+		
+		
+		ArrayList<String> newNoList = new ArrayList<String>();
+		newNoList.addAll(noWords);
+
 		// extract the text
 		if (!mf.equals("application/pdf")) {
 			ByteBuffer imageBytes = documentTextService.uploadFile(multipartFile);
@@ -175,7 +206,7 @@ public class ScriberController {
 
 			// Testing out aws comprehend
 			System.out.println("Start: Sentiment Analysis Test 1");
-			sentimentAnalysis(resultBlockList.get(1).getText());
+			sentimentAnalysis(resultBlockList.get(1).getText(), sd);
 			System.out.println("End: Sentiment Analysis Test 1\n");
 
 			System.out.println("[LINE Entity Detection Start]");
@@ -190,24 +221,48 @@ public class ScriberController {
 
 			ds = documentTextService.BuildaSignature(entityList, ds);
 			ovr = documentTextService.OVResponse(entityList, ovr);
-			/*
-			 * System.out.println("\n\n[WORD Entity Detection Start]"); for (Block b :
-			 * resultBlockList) if (b.getText() != null && b.getBlockType().equals("WORD"))
-			 * { System.out.println(b.getText()); entityDetection(b.getText()); }
-			 * System.out.println("[WORD Entity Detection End]");
-			 */
 
+			System.out.println("\n\n[WORD Entity Detection Start]");
+			int wordCounter = 0;
+			int noWordCount = 0;
+			
+			for (Block b : resultBlockList) {
+				if (b.getText() != null && b.getBlockType().equals("WORD")) {
+					//System.out.println(b.getText());
+					wordCounter++;
+					for(String i : newNoList) {
+						if(b.getText().equals(i)) {
+							noWordCount++;
+						}
+					}
+				}
+			}
+			int compliantWordCount = wordCounter - noWordCount;
+			sd.setWordCount(wordCounter);
+			sd.setNonCompliantWordCount(noWordCount);
+			sd.setCompliantWordCount(compliantWordCount);
+			sd.setConfidencePercent(compliantWordCount/wordCounter);
+			
+			System.out.println("[WORD Entity Detection End/ Word Count:" + wordCounter +"]");
+			sd.setSubmittedFile(sf);
+			sf.setSubmissionDetails(sd);
+			
+			documentTextService.FinalDestination(fv, ds);
+			
 			digitalSignatureRepo.save(ds);
-			// submittedFileRepo.save();
-			// return new ResponseEntity<DigitalSignature>(ds, HttpStatus.OK);
-			return new ResponseEntity<OverViewResponse>(ovr, HttpStatus.OK);
-		} else {
+			submittedFileRepo.save(sf);
+			submittedDetailsRepo.save(sd);
+			
+			return new ResponseEntity<FinalView>(fv, HttpStatus.OK);
+		} 
+		
+		else {
 			byte[] image = multipartFile.getBytes();
 			UploadToS3(bucketName, fileName, multipartFile.getContentType(), image);
 			System.out.println("application is pdf, running the PDFRunner...");
 			PDFRunner(bucketName, fileName, outputFileName);
 		}
-		return new ResponseEntity<OverViewResponse>(ovr, HttpStatus.OK);
+		return new ResponseEntity<FinalView>(fv, HttpStatus.OK);
 
 	}
 
@@ -217,7 +272,7 @@ public class ScriberController {
 		return comprehendClient;
 	}
 
-	public void sentimentAnalysis(String text) {
+	public void sentimentAnalysis(String text, SubmissionDetails sd) {
 
 		AmazonComprehend comprehendClient = amazonComprehend();
 
@@ -226,6 +281,7 @@ public class ScriberController {
 		DetectSentimentRequest detectSentimentRequest = new DetectSentimentRequest().withText(text)
 				.withLanguageCode("en");
 		DetectSentimentResult detectSentimentResult = comprehendClient.detectSentiment(detectSentimentRequest);
+		sd.setSentimentScore(detectSentimentResult.getSentiment());
 		System.out.println(detectSentimentResult);
 		System.out.println("End of DetectSentiment\n");
 		System.out.println("Done");
@@ -260,7 +316,8 @@ public class ScriberController {
 		list.addAll(detectEntitiesResult.getEntities());
 	}
 
-	private void PDFRunner(String bucketName, String documentName, String outputDocumentName) throws IOException, InterruptedException {
+	private void PDFRunner(String bucketName, String documentName, String outputDocumentName)
+			throws IOException, InterruptedException {
 		System.out.println("Generating searchable pdf from: " + bucketName + "/" + documentName);
 
 		// Extract text using Amazon Textract
@@ -287,13 +344,12 @@ public class ScriberController {
 
 	private List<ArrayList<TextLine>> extractText(String bucketName, String documentName) throws InterruptedException {
 
-		//AmazonTextract client = AmazonTextractClientBuilder.defaultClient();
-		
+		// AmazonTextract client = AmazonTextractClientBuilder.defaultClient();
+
 		// Call DetectDocumentText
-        AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
-                "https://textract.us-west-2.amazonaws.com", "us-west-2");
-        AmazonTextract client = AmazonTextractClientBuilder.standard()
-                .withEndpointConfiguration(endpoint).build();
+		AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
+				"https://textract.us-west-2.amazonaws.com", "us-west-2");
+		AmazonTextract client = AmazonTextractClientBuilder.standard().withEndpointConfiguration(endpoint).build();
 
 		StartDocumentTextDetectionRequest req = new StartDocumentTextDetectionRequest()
 				.withDocumentLocation(new DocumentLocation()
