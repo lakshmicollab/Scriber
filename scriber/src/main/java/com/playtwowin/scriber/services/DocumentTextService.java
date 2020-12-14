@@ -15,14 +15,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 //import com.amazonaws.services.s3.AmazonS3;
 //import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 //import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.comprehend.model.Entity;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.textract.AmazonTextract;
 import com.amazonaws.services.textract.AmazonTextractClientBuilder;
 import com.amazonaws.services.textract.model.Block;
@@ -103,6 +111,48 @@ public class DocumentTextService {
 		return result;
 	}
 
+	public File multipartToFile(MultipartFile multipart, String fileName) throws IllegalStateException, IOException {
+		File convFile = new File(System.getProperty("java.io.tmpdir")+"/"+fileName);
+		multipart.transferTo(convFile);
+		return convFile;
+	}
+
+	public void uploadToS3(String bName, String fileObjKeyName1, MultipartFile multipartFile) throws IOException {
+		Regions clientRegion = Regions.US_WEST_2;
+		String bucketName = bName;
+//		String stringObjKeyName = strObjkeyName;
+		String fileObjKeyName = fileObjKeyName1;
+//		String fileName = fileName1;
+		File file = multipartToFile(multipartFile, multipartFile.getOriginalFilename());
+
+		try {
+			//This code expects that you have AWS credentials set up per:
+			// https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
+			AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+					.withRegion(clientRegion)
+					.build();
+
+			// Upload a text string as a new object.
+//			s3Client.putObject(bucketName, stringObjKeyName, "Uploaded String Object");
+
+			// Upload a file as a new object with ContentType and title specified.
+			PutObjectRequest request = new PutObjectRequest(bucketName, fileObjKeyName, file);
+			ObjectMetadata metadata = new ObjectMetadata();
+			metadata.setContentType("plain/text");
+			metadata.addUserMetadata("title", "someTitle");
+			request.setMetadata(metadata);
+			s3Client.putObject(request);
+		} catch (AmazonServiceException e) {
+			// The call was transmitted successfully, but Amazon S3 couldn't process
+			// it, so it returned an error response.
+			e.printStackTrace();
+		} catch (SdkClientException e) {
+			// Amazon S3 couldn't be contacted for a response, or the client
+			// couldn't parse the response from Amazon S3.
+			e.printStackTrace();
+		}
+	}
+
 	// used to create a digital signature and save to DB
 	public DigitalSignature BuildaSignature(ArrayList<Entity> list, DigitalSignature ds) {
 
@@ -157,7 +207,7 @@ public class DocumentTextService {
 		return ovr;
 	}
 	
-	public FinalView FinalDestination(FinalView fv, DigitalSignature ds) {
+	public FinalView FinalDestination(@Nullable FinalView fv, DigitalSignature ds) {
 		int counter = ds.getSignatureId();
 		for(SubmittedFile s : submittedFileRepo.findAll()) {
 			if(s.getFileName().equals(fv.getFileName())) {
@@ -173,13 +223,13 @@ public class DocumentTextService {
 		fv.setPhoneNumber(ds.getPhoneNumber());
 
 		//full name
-		if(fv.getFullName().equals(null)) {
+		if(fv.getFullName() == null) {
 			fv.setFullName("John Smith");
 		}
 		
 		//address
 		
-		if(fv.getAddress().equals(null)) {
+		if(fv.getAddress() == null) {
 			fv.setAddress("2390 w. 27th street");
 		}
 		
@@ -198,12 +248,16 @@ public class DocumentTextService {
 		
 		if(fv.getFileName().equals("bmw.jpg")) {
 			fv.setStatus("approved");
-			fv.setComments("Document Approved");
+//			fv.setRecommendation("Document Approved");
+		}
+
+		if(fv.getRecommendation() != null) {
+			fv.setStatus("APPROVED");
 		}
 		else if(fv.getFileName().equals("martial-arts.jpg")) {
 			fv.setCompany(null);
 			fv.setStatus("rejected");
-			fv.setComments("fix: " + fv.getCompany());
+			fv.setRecommendation("fix: " + fv.getCompany());
 		}
 		
 		return fv;

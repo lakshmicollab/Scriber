@@ -10,7 +10,7 @@ public class FinalView {
 	String company;
 	String phoneNumber;
 	String Status;
-	String comments;
+	String recommendation;
 
 	public int getId() {
 		return id;
@@ -76,16 +76,16 @@ public class FinalView {
 		Status = status;
 	}
 
-	public String getComments() {
-		return comments;
+	public String getRecommendation() {
+		return recommendation;
 	}
 
-	public void setComments(String comments) {
-		this.comments = comments;
+	public void setRecommendation(String recommendation) {
+		this.recommendation = recommendation;
 	}
 
 	public FinalView(int id, String fileName, String fullName, String address, String email, String company,
-			String phoneNumber, String status, String comments) {
+			String phoneNumber, String status, String recommendation) {
 		super();
 		this.id = id;
 		this.fileName = fileName;
@@ -95,7 +95,7 @@ public class FinalView {
 		this.company = company;
 		this.phoneNumber = phoneNumber;
 		Status = status;
-		this.comments = comments;
+		this.recommendation = recommendation;
 	}
 
 	public FinalView() {
@@ -106,7 +106,7 @@ public class FinalView {
 	public String toString() {
 		return "FinalView [id=" + id + ", fileName=" + fileName + ", fullName=" + fullName + ", address=" + address
 				+ ", email=" + email + ", company=" + company + ", phoneNumber=" + phoneNumber + ", Status=" + Status
-				+ ", comments=" + comments + "]";
+				+ ", recommendation=" + recommendation + "]";
 	}
 
 }
