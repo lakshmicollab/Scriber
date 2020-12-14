@@ -34,10 +34,13 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.textract.model.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.services.textract.model.DetectDocumentTextRequest;
 import software.amazon.awssdk.services.textract.model.DetectDocumentTextResponse;
 import software.amazon.awssdk.services.textract.model.Document;
@@ -47,10 +50,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -61,7 +60,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+
 @RestController
+@RequestMapping("/api")
+@Api(value="scriber")
 public class ScriberController {
 
 	// Create credentials using a provider chain. For more information, see
@@ -102,6 +104,7 @@ public class ScriberController {
 
 //    curl -k -X POST -F 'image=@/Pictures/running_cheetah.jpg' -v  http://localhost:8080/upload/
 	@PostMapping("/upload")
+	@ApiOperation(value = "upload")
 	public String fileUploader(@RequestParam("file") MultipartFile multipartFile) {
 		String fileName = multipartFile.getOriginalFilename();
 		return fileName;
@@ -157,7 +160,9 @@ public class ScriberController {
 	 * }
 	 */
 	@PostMapping("/doc-upload")
-	public ResponseEntity<FinalView> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
+	@ApiOperation(value = "upload a file")
+	public ResponseEntity<FinalView> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile,
+															@RequestParam("fileType") String fileType)
 			throws Exception {
 		
 		// output PDF or IMAGE
