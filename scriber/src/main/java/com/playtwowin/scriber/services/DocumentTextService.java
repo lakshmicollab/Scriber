@@ -22,6 +22,7 @@ import javax.swing.*;
 //import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.services.comprehend.model.Entity;
 import com.amazonaws.services.textract.AmazonTextract;
 import com.amazonaws.services.textract.AmazonTextractClientBuilder;
 import com.amazonaws.services.textract.model.Block;
@@ -33,6 +34,9 @@ import com.amazonaws.services.textract.model.Document;
 import com.amazonaws.services.textract.model.Point;
 import com.amazonaws.services.textract.model.Relationship;
 import com.amazonaws.util.IOUtils;
+import com.playtwowin.model.DigitalSignature;
+import com.playtwowin.model.OverViewResponse;
+
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,54 +44,104 @@ import org.springframework.web.multipart.MultipartFile;
 //Calls DetectDocumentText.
 //Loads document from S3 bucket. Displays the document and bounding boxes around detected lines/words of text.
 
-
-
-@Component
+@Service
 public class DocumentTextService {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    BufferedImage image;
-    DetectDocumentTextResult result;
+	BufferedImage image;
+	DetectDocumentTextResult result;
 
-    public DocumentTextService(DetectDocumentTextResult documentResult, BufferedImage bufImage) throws Exception {
+	public DocumentTextService(DetectDocumentTextResult documentResult, BufferedImage bufImage) throws Exception {
 //        super();
 
-        result = documentResult; // Results of text detection.
-        image = bufImage; // The image containing the document.
+		result = documentResult; // Results of text detection.
+		image = bufImage; // The image containing the document.
 
-    }
+	}
 
-    public DocumentTextService(){}
+	public DocumentTextService() {
+	}
 
-    public ByteBuffer uploadFile(MultipartFile multipartFile) {
-        ByteBuffer imageBytes = null;
+	public ByteBuffer uploadFile(MultipartFile multipartFile) {
+		ByteBuffer imageBytes = null;
 
-        try (InputStream inputStream = multipartFile.getInputStream()) {
-            imageBytes = ByteBuffer.wrap(IOUtils.toByteArray(inputStream));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		try (InputStream inputStream = multipartFile.getInputStream()) {
+			imageBytes = ByteBuffer.wrap(IOUtils.toByteArray(inputStream));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-        return imageBytes;
-    }
-    // detect text
-    public DetectDocumentTextResult textDetector(ByteBuffer imageBytes){
+		return imageBytes;
+	}
 
-        // Call DetectDocumentText
-        AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
-                "https://textract.us-east-1.amazonaws.com", "us-east-1");
-        AmazonTextract client = AmazonTextractClientBuilder.standard()
-                .withEndpointConfiguration(endpoint).build();
+	// detect text
+	public DetectDocumentTextResult textDetector(ByteBuffer imageBytes) {
 
-        DetectDocumentTextRequest request = new DetectDocumentTextRequest()
-                .withDocument(new Document()
-                        .withBytes(imageBytes));
+		// Call DetectDocumentText
+		AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
+				"https://textract.us-east-1.amazonaws.com", "us-east-1");
+		AmazonTextract client = AmazonTextractClientBuilder.standard().withEndpointConfiguration(endpoint).build();
 
+		DetectDocumentTextRequest request = new DetectDocumentTextRequest()
+				.withDocument(new Document().withBytes(imageBytes));
 
-        DetectDocumentTextResult result = client.detectDocumentText(request);
+		DetectDocumentTextResult result = client.detectDocumentText(request);
 //        DocumentTextService result;
-        return result;
-    }
-    
+		return result;
+	}
+
+	// used to create a digital signature and return through the API
+	public DigitalSignature BuildaSignature(ArrayList<Entity> list, DigitalSignature ds) {
+
+		/*
+		 * for the list of Types, refer to the training sheets or aws comprehend
+		 */
+		for (Entity e : list) {
+			// type to be changed for "FULLNAME"
+			if (e.getType().equals("PERSON")) {
+				ds.setFullName(e.getText());
+			}
+			if (e.getType().equals("TITLE")) {
+				ds.setTitle(e.getText());
+			}
+			// train for "AFFILIATE"
+			// to be used in a search to match affiliation and then get an ID
+			if (e.getType().equals("OTHER")) {
+				ds.setAffiliation(e.getText());
+			}
+			// to change into "PHONENUMBER"
+			else if(e.getType().equals("QUANTITY")) {
+				ds.setPhoneNumber(e.getText());
+			}
+			else if (e.getType().equals("EMAIL")) {
+				ds.setEmail(e.getText());
+			}
+			else if(e.getType().equals("WEBSITE")) {
+				ds.setWebsite(e.getText());
+			}
+			else if(e.getType().equals("SOCIALMEDIAHANDLE")) {
+				ds.setSocialmediaHandle(e.getText());
+			}
+			else if(e.getType().equals("LOCATION")) {
+				ds.setAddress(e.getText());
+			}
+		}
+		return ds;
+	}
+
+	public OverViewResponse OVResponse(ArrayList<Entity> list, OverViewResponse ovr) {
+		
+		for(Entity e: list) {
+			//replaced with "FULLNAME"
+			if(e.getType().equals("PERSON")) {
+				ovr.setFullName(e.getText());
+			}
+			//replaced with "ADDRESS"
+			else if(e.getType().equals("LOCATION")) {
+				ovr.setAddress(e.getText());
+			}
+		}
+		return ovr;
+	}
 }
