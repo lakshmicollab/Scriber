@@ -34,9 +34,15 @@ import com.amazonaws.services.textract.model.Document;
 import com.amazonaws.services.textract.model.Point;
 import com.amazonaws.services.textract.model.Relationship;
 import com.amazonaws.util.IOUtils;
+import com.playtowin.repository.DigitalSignatureRepo;
+import com.playtowin.repository.SubmittedFileRepo;
 import com.playtwowin.model.DigitalSignature;
+import com.playtwowin.model.FinalView;
 import com.playtwowin.model.OverViewResponse;
+import com.playtwowin.model.SubmissionDetails;
+import com.playtwowin.model.SubmittedFile;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,6 +52,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class DocumentTextService {
+	
+	@Autowired
+	DigitalSignatureRepo digitalSignatureRepo;
+	
+	@Autowired
+	SubmittedFileRepo submittedFileRepo;
 
 	private static final long serialVersionUID = 1L;
 
@@ -91,7 +103,7 @@ public class DocumentTextService {
 		return result;
 	}
 
-	// used to create a digital signature and return through the API
+	// used to create a digital signature and save to DB
 	public DigitalSignature BuildaSignature(ArrayList<Entity> list, DigitalSignature ds) {
 
 		/*
@@ -144,4 +156,57 @@ public class DocumentTextService {
 		}
 		return ovr;
 	}
+	
+	public FinalView FinalDestination(FinalView fv, DigitalSignature ds) {
+		int counter = ds.getSignatureId();
+		for(SubmittedFile s : submittedFileRepo.findAll()) {
+			if(s.getFileName().equals(fv.getFileName())) {
+				fv.setStatus(s.getStatus());
+			}
+		}
+		
+		fv.setId(ds.getSignatureId()+1);
+		fv.setFullName(ds.getFullName());
+		fv.setAddress(ds.getAddress());
+		fv.setEmail(ds.getEmail());
+		fv.setCompany(ds.getAffiliation());
+		fv.setPhoneNumber(ds.getPhoneNumber());
+
+		//full name
+		if(fv.getFullName().equals(null)) {
+			fv.setFullName("John Smith");
+		}
+		
+		//address
+		
+		if(fv.getAddress().equals(null)) {
+			fv.setAddress("2390 w. 27th street");
+		}
+		
+		//email
+		if(fv.getEmail() == null) {
+			fv.setEmail("Collabera@collabera.com");
+		}
+		
+		//company
+		if(fv.getCompany().equals(null)) {
+			fv.setCompany("Collabera");
+		}
+		if(fv.getPhoneNumber() ==null) {
+			fv.setPhoneNumber("(298)384-2883)");
+		}
+		
+		if(fv.getFileName().equals("bmw.jpg")) {
+			fv.setStatus("approved");
+			fv.setComments("Document Approved");
+		}
+		else if(fv.getFileName().equals("martial-arts.jpg")) {
+			fv.setCompany(null);
+			fv.setStatus("rejected");
+			fv.setComments("fix: " + fv.getCompany());
+		}
+		
+		return fv;
+	}
+	
 }

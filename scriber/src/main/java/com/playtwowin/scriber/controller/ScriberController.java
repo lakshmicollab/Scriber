@@ -15,12 +15,15 @@ import com.amazonaws.services.textract.model.DetectDocumentTextResult;
 import com.amazonaws.services.textract.model.StartDocumentTextDetectionRequest;
 import com.amazonaws.services.textract.model.StartDocumentTextDetectionResult;
 import com.playtowin.repository.DigitalSignatureRepo;
+import com.playtowin.repository.SubmissionDetailsRepo;
 import com.playtowin.repository.SubmittedFileRepo;
 import com.playtwowin.model.DigitalSignature;
+import com.playtwowin.model.FinalView;
 import com.playtwowin.model.ImageType;
 import com.playtwowin.model.SubmittedFile;
 import com.playtwowin.model.TextLine;
 import com.playtwowin.model.OverViewResponse;
+import com.playtwowin.model.SubmissionDetails;
 import com.playtwowin.scriber.services.DocumentTextService;
 import com.playtwowin.scriber.services.PDFService;
 import com.amazonaws.services.textract.AmazonTextract;
@@ -44,8 +47,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -60,14 +61,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
 @RestController
-@RequestMapping("/api")
-@Api(value="scriber")
 public class ScriberController {
 
 	// Create credentials using a provider chain. For more information, see
@@ -82,6 +76,29 @@ public class ScriberController {
 
 	@Autowired
 	SubmittedFileRepo submittedFileRepo;
+	
+	@Autowired
+	SubmissionDetailsRepo submittedDetailsRepo;
+	
+	static List<String> noWords = new ArrayList<>(List.of(
+			"Achieve",           
+			"unique",
+			"predict",
+			"Achieve",
+			"realize",
+			"reach",
+			"ensure",
+			"meet",
+			"unique",	
+			"innovative",
+			"revolutionary",	
+			"unparalleled",
+			"one of a kind",
+			"cutting edge",
+			"state of the art",	
+			"Pease of mind",
+			"sleep at night"
+			));
 
 //    curl -k -X POST -F 'image=@/Pictures/running_cheetah.jpg' -v  http://localhost:8080/upload/
 	@PostMapping("/upload")
@@ -90,66 +107,59 @@ public class ScriberController {
 		return fileName;
 	}
 
-    // testing out AWS Textract
-//    @PostMapping("/doc-upload")
-//    @ApiOperation(value = "upload a file")
-//    public void documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile) throws Exception {
-		// testing out AWS Textract
-		/*
-		 * @PostMapping("/doc-upload") public ResponseEntity<ArrayList<Entity>>
-		 * documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
-		 * throws Exception {
-		 *
-		 * // Serialize the uploaded file ByteBuffer imageBytes =
-		 * documentTextService.uploadFile(multipartFile);
-		 *
-		 * // extract the text DetectDocumentTextResult result =
-		 * documentTextService.textDetector(imageBytes);
-		 *
-		 * List<Block> resultBlockList = result.getBlocks(); ArrayList<Entity>
-		 * entityList = new ArrayList<Entity>();
-		 *
-		 * System.out.println("[This Content was Extracted from the Document]");
-		 *
-		 * // prints the documents content to the console for (Block b :
-		 * resultBlockList) if (b.getText() != null && b.getBlockType().equals("LINE"))
-		 * System.out.println(b.getText());
-		 *
-		 * System.out.println("[Document Text Detection Complete]");
-		 *
-		 * // Testing out aws comprehend
-		 *
-		 * System.out.println("Start: Sentiment Analysis Test 1");
-		 * sentimentAnalysis(resultBlockList.get(1).getText());
-		 * System.out.println("End: Sentiment Analysis Test 1\n");
-		 *
-		 *
-		 * System.out.println("[LINE Entity Detection Start]"); for (Block b :
-		 * resultBlockList) { if (b.getText() != null &&
-		 * b.getBlockType().equals("LINE")) { // System.out.println(b.getText()); //
-		 * entityDetection(b.getText()); //entityList.add(b.getText());
-		 * entityDetection(b.getText(), entityList); //adds the entities to the list
-		 * initialized above } } System.out.println("[LINE Entity Detection End]");
-		 *
-		 *
-		 *
-		 * System.out.println("\n\n[WORD Entity Detection Start]"); for (Block b :
-		 * resultBlockList) if (b.getText() != null && b.getBlockType().equals("WORD"))
-		 * { System.out.println(b.getText()); entityDetection(b.getText()); }
-		 * System.out.println("[WORD Entity Detection End]");
-		 *
-		 *
-		 * return new ResponseEntity<ArrayList<Entity>>(entityList, HttpStatus.OK);
-		 *
-		 * }
-		 */
-	//}
+	// testing out AWS Textract
+	/*
+	 * @PostMapping("/doc-upload") public ResponseEntity<ArrayList<Entity>>
+	 * documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
+	 * throws Exception {
+	 * 
+	 * // Serialize the uploaded file ByteBuffer imageBytes =
+	 * documentTextService.uploadFile(multipartFile);
+	 * 
+	 * // extract the text DetectDocumentTextResult result =
+	 * documentTextService.textDetector(imageBytes);
+	 * 
+	 * List<Block> resultBlockList = result.getBlocks(); ArrayList<Entity>
+	 * entityList = new ArrayList<Entity>();
+	 * 
+	 * System.out.println("[This Content was Extracted from the Document]");
+	 * 
+	 * // prints the documents content to the console for (Block b :
+	 * resultBlockList) if (b.getText() != null && b.getBlockType().equals("LINE"))
+	 * System.out.println(b.getText());
+	 * 
+	 * System.out.println("[Document Text Detection Complete]");
+	 * 
+	 * // Testing out aws comprehend
+	 * 
+	 * System.out.println("Start: Sentiment Analysis Test 1");
+	 * sentimentAnalysis(resultBlockList.get(1).getText());
+	 * System.out.println("End: Sentiment Analysis Test 1\n");
+	 * 
+	 * 
+	 * System.out.println("[LINE Entity Detection Start]"); for (Block b :
+	 * resultBlockList) { if (b.getText() != null &&
+	 * b.getBlockType().equals("LINE")) { // System.out.println(b.getText()); //
+	 * entityDetection(b.getText()); //entityList.add(b.getText());
+	 * entityDetection(b.getText(), entityList); //adds the entities to the list
+	 * initialized above } } System.out.println("[LINE Entity Detection End]");
+	 * 
+	 * 
+	 * 
+	 * System.out.println("\n\n[WORD Entity Detection Start]"); for (Block b :
+	 * resultBlockList) if (b.getText() != null && b.getBlockType().equals("WORD"))
+	 * { System.out.println(b.getText()); entityDetection(b.getText()); }
+	 * System.out.println("[WORD Entity Detection End]");
+	 * 
+	 * 
+	 * return new ResponseEntity<ArrayList<Entity>>(entityList, HttpStatus.OK);
+	 * 
+	 * }
+	 */
 	@PostMapping("/doc-upload")
-	@ApiOperation(value = "upload a file")
-	public ResponseEntity<OverViewResponse> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile) throws Exception {
-
-		// Serialize the uploaded file
-
+	public ResponseEntity<FinalView> documentUploaderSimple(@RequestParam("file") MultipartFile multipartFile)
+			throws Exception {
+		
 		// output PDF or IMAGE
 		System.out.println(multipartFile.getContentType());
 
@@ -163,14 +173,21 @@ public class ScriberController {
 
 		String outputFileName = "outputFile";
 
-		int docCounter = 0;
 		ArrayList<Entity> entityList = new ArrayList<Entity>();
 		DigitalSignature ds = new DigitalSignature();
 		SubmittedFile sf = new SubmittedFile();
+		SubmissionDetails sd = new SubmissionDetails();
 		OverViewResponse ovr = new OverViewResponse();
+		FinalView fv = new FinalView();
 
 		ovr.setFileName(fileName);
 		sf.setFileName(fileName);
+		fv.setFileName(fileName);
+		
+		
+		
+		ArrayList<String> newNoList = new ArrayList<String>();
+		newNoList.addAll(noWords);
 
 		// extract the text
 		if (!mf.equals("application/pdf")) {
@@ -189,7 +206,7 @@ public class ScriberController {
 
 			// Testing out aws comprehend
 			System.out.println("Start: Sentiment Analysis Test 1");
-			sentimentAnalysis(resultBlockList.get(1).getText());
+			sentimentAnalysis(resultBlockList.get(1).getText(), sd);
 			System.out.println("End: Sentiment Analysis Test 1\n");
 
 			System.out.println("[LINE Entity Detection Start]");
@@ -204,24 +221,48 @@ public class ScriberController {
 
 			ds = documentTextService.BuildaSignature(entityList, ds);
 			ovr = documentTextService.OVResponse(entityList, ovr);
-			/*
-			 * System.out.println("\n\n[WORD Entity Detection Start]"); for (Block b :
-			 * resultBlockList) if (b.getText() != null && b.getBlockType().equals("WORD"))
-			 * { System.out.println(b.getText()); entityDetection(b.getText()); }
-			 * System.out.println("[WORD Entity Detection End]");
-			 */
 
+			System.out.println("\n\n[WORD Entity Detection Start]");
+			int wordCounter = 0;
+			int noWordCount = 0;
+			
+			for (Block b : resultBlockList) {
+				if (b.getText() != null && b.getBlockType().equals("WORD")) {
+					//System.out.println(b.getText());
+					wordCounter++;
+					for(String i : newNoList) {
+						if(b.getText().equals(i)) {
+							noWordCount++;
+						}
+					}
+				}
+			}
+			int compliantWordCount = wordCounter - noWordCount;
+			sd.setWordCount(wordCounter);
+			sd.setNonCompliantWordCount(noWordCount);
+			sd.setCompliantWordCount(compliantWordCount);
+			sd.setConfidencePercent(compliantWordCount/wordCounter);
+			
+			System.out.println("[WORD Entity Detection End/ Word Count:" + wordCounter +"]");
+			sd.setSubmittedFile(sf);
+			sf.setSubmissionDetails(sd);
+			
+			documentTextService.FinalDestination(fv, ds);
+			
 			digitalSignatureRepo.save(ds);
-			// submittedFileRepo.save();
-			// return new ResponseEntity<DigitalSignature>(ds, HttpStatus.OK);
-			return new ResponseEntity<OverViewResponse>(ovr, HttpStatus.OK);
-		} else {
+			submittedFileRepo.save(sf);
+			submittedDetailsRepo.save(sd);
+			
+			return new ResponseEntity<FinalView>(fv, HttpStatus.OK);
+		} 
+		
+		else {
 			byte[] image = multipartFile.getBytes();
 			UploadToS3(bucketName, fileName, multipartFile.getContentType(), image);
 			System.out.println("application is pdf, running the PDFRunner...");
 			PDFRunner(bucketName, fileName, outputFileName);
 		}
-		return new ResponseEntity<OverViewResponse>(ovr, HttpStatus.OK);
+		return new ResponseEntity<FinalView>(fv, HttpStatus.OK);
 
 	}
 
@@ -231,7 +272,7 @@ public class ScriberController {
 		return comprehendClient;
 	}
 
-	public void sentimentAnalysis(String text) {
+	public void sentimentAnalysis(String text, SubmissionDetails sd) {
 
 		AmazonComprehend comprehendClient = amazonComprehend();
 
@@ -240,6 +281,7 @@ public class ScriberController {
 		DetectSentimentRequest detectSentimentRequest = new DetectSentimentRequest().withText(text)
 				.withLanguageCode("en");
 		DetectSentimentResult detectSentimentResult = comprehendClient.detectSentiment(detectSentimentRequest);
+		sd.setSentimentScore(detectSentimentResult.getSentiment());
 		System.out.println(detectSentimentResult);
 		System.out.println("End of DetectSentiment\n");
 		System.out.println("Done");
@@ -248,15 +290,15 @@ public class ScriberController {
 	// original method of entityDetection(String text)
 	/*
 	 * public void entityDetection(String text) {
-	 *
+	 * 
 	 * AmazonComprehend comprehendClient = amazonComprehend();
-	 *
+	 * 
 	 * // Call detectEntities API DetectEntitiesRequest detectEntitiesRequest = new
 	 * DetectEntitiesRequest().withText(text).withLanguageCode("en");
 	 * DetectEntitiesResult detectEntitiesResult =
 	 * comprehendClient.detectEntities(detectEntitiesRequest);
 	 * detectEntitiesResult.getEntities().forEach(System.out::println);
-	 *
+	 * 
 	 * }
 	 */
 
@@ -274,7 +316,8 @@ public class ScriberController {
 		list.addAll(detectEntitiesResult.getEntities());
 	}
 
-	private void PDFRunner(String bucketName, String documentName, String outputDocumentName) throws IOException, InterruptedException {
+	private void PDFRunner(String bucketName, String documentName, String outputDocumentName)
+			throws IOException, InterruptedException {
 		System.out.println("Generating searchable pdf from: " + bucketName + "/" + documentName);
 
 		// Extract text using Amazon Textract
@@ -301,13 +344,12 @@ public class ScriberController {
 
 	private List<ArrayList<TextLine>> extractText(String bucketName, String documentName) throws InterruptedException {
 
-		//AmazonTextract client = AmazonTextractClientBuilder.defaultClient();
+		// AmazonTextract client = AmazonTextractClientBuilder.defaultClient();
 
 		// Call DetectDocumentText
-        AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
-                "https://textract.us-west-2.amazonaws.com", "us-west-2");
-        AmazonTextract client = AmazonTextractClientBuilder.standard()
-                .withEndpointConfiguration(endpoint).build();
+		AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration(
+				"https://textract.us-west-2.amazonaws.com", "us-west-2");
+		AmazonTextract client = AmazonTextractClientBuilder.standard().withEndpointConfiguration(endpoint).build();
 
 		StartDocumentTextDetectionRequest req = new StartDocumentTextDetectionRequest()
 				.withDocumentLocation(new DocumentLocation()
