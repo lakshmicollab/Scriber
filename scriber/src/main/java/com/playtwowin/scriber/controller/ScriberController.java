@@ -301,14 +301,13 @@ public class ScriberController {
 //        System.out.println("This is the Color: " + mycolor.);
         int Red, Green, Blue = 0;
 
-        for (int y = 0; y < imgHeight; y++)
-        {
-            for (int x = 0; x < imgWidth; x++)
-            {
+//        for (int y = 0; y < imgHeight; y++)
+//        {
+//            for (int x = 0; x < imgWidth; x++)
+//            {
 //                int = imgWidth.getRGB(x,y);
-
-            }
-        }
+//            }
+//        }
 
 
     }
@@ -445,17 +444,18 @@ meaning, “or not” is needed
 		// *******************************************************
 
     	// arn:aws:rekognition:us-west-2:724053722933:project/bank-of-america/version/bank-of-america.2020-12-13T23.10.49/1607919049727
-		awsRekognitionSetup();
+//		awsRekognitionSetup();
+		awsRekognitionStop();
 //    	if(fileType.equals("document")){
 			// Upload file to s3
-			documentTextService.uploadToS3(bucketName, multipartFile.getOriginalFilename(), multipartFile);
+//			documentTextService.uploadToS3(bucketName, multipartFile.getOriginalFilename(), multipartFile);
 //		}
-		float i = 1;
+//		float i = 1;
 		// *****************************************
-		DetectCustomLabelsRequest request = new DetectCustomLabelsRequest()
-				.withProjectVersionArn(awsRekognitionARN)
-				.withImage(new Image().withS3Object(new S3Object().withName(multipartFile.getOriginalFilename()).withBucket(bucketName)))
-				.withMinConfidence(i);
+//		DetectCustomLabelsRequest request = new DetectCustomLabelsRequest()
+//				.withProjectVersionArn(awsRekognitionARN)
+//				.withImage(new Image().withS3Object(new S3Object().withName(multipartFile.getOriginalFilename()).withBucket(bucketName)))
+//				.withMinConfidence(i);
 
 //		width = image.getWidth();getWidth
 //		height = image.getHeight();
@@ -463,11 +463,11 @@ meaning, “or not” is needed
 		// Call DetectCustomLabels
 //		AmazonRekognition amazonRekognition = AmazonRekognitionClientBuilder.standard().withCredentials(awsCreds)
 //				.withRegion("us-west-2").build();
-		DetectCustomLabelsResult result1 = rekognitionClient.detectCustomLabels(request);
-		System.out.println(result1);
+//		DetectCustomLabelsResult result1 = rekognitionClient.detectCustomLabels(request);
+//		System.out.println(result1);
 
 		// *****************************************
-		awsRekognitionStop();
+//		awsRekognitionStop();
 
 
 		// output PDF or IMAGE
